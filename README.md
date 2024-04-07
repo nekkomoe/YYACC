@@ -14,7 +14,7 @@ Yet Yet Another Compiler Compiler
 - less than or equal to：`\<\=`
 - greater than or equal to：`\>\=`
 - other symbols：`[!?:;.,#<=>+-\*/\(\)]`
-- comment：`\{[\f\n\r\t\v -z|~]*\}`
+- comment：`\set{[\f\n\r\t\v -z|~]*}`
 - white space chars：`[ \f\n\r\t\v][ \f\n\r\t\v]*`
 
 ## Automaton architecture
@@ -68,9 +68,9 @@ By using the following transformation, regular expressions can be constructed in
 
 ### From ε-NFA to NFA (remove ε)
 
-Let $\epsilon(q)=\{p|\hat \delta(q,\varepsilon)=p\}$ to represent the state-set reached by ε-edge from state-q.
+Let $\epsilon(q)=\set{p|\hat \delta(q,\varepsilon)=p}$ to represent the state-set reached by ε-edge from state-q.
 
-Therefore, $\forall c \in \Sigma,\delta_{NFA}(E(q),c)=\{\cup_{p \in S} E(p)|S=\{r|\delta(q,c)=r\} \}$.
+Therefore, $\forall c \in \Sigma,\delta_{NFA}(E(q),c)=\set{\cup_{p \in S} E(p)|S=\set{r|\delta(q,c)=r} }$.
 
 In fact, it is to represent the process of simulating ε-NFA with a simplified state set.
 
@@ -78,9 +78,9 @@ In fact, it is to represent the process of simulating ε-NFA with a simplified s
 
 We use subset construction method.
 
-Similar to the step of simplify ε-NFA, we note $\Gamma _ c(q)= \{ p|\delta(q,c)=p \}$.
+Similar to the step of simplify ε-NFA, we note $\Gamma _ c(q)= \set{ p|\delta(q,c)=p }$.
 
-Then the DFA is designed like this: initial state is $\{ q _ 0 \}$, transition function is $\delta_{DFA}(S,c)=\cup_{p \in S} \Gamma_c(p)$.
+Then the DFA is designed like this: initial state is $\set{ q _ 0 }$, transition function is $\delta_{DFA}(S,c)=\cup_{p \in S} \Gamma_c(p)$.
 
 It's important that:
 
