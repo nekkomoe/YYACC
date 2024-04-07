@@ -14,7 +14,7 @@ Yet Yet Another Compiler Compiler
 - less than or equal to：`\<\=`
 - greater than or equal to：`\>\=`
 - other symbols：`[!?:;.,#<=>+-\*/\(\)]`
-- comment：`\set{[\f\n\r\t\v -z|~]*}`
+- comment：`\{[\f\n\r\t\v -z|~]*\}`
 - white space chars：`[ \f\n\r\t\v][ \f\n\r\t\v]*`
 
 ## Automaton architecture
