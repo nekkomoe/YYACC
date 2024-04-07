@@ -4,90 +4,87 @@ Yet Yet Another Compiler Compiler
 
 ---
 
-# Construction of Compiler Framework and a PL/0 Language Interpreter Implementation
+# 小型编译器框架构建与PL/0语言解释器实例化
 
-## Regex for tokens
+## 设计Token的正则表达式
 
-- number：`[0-9][0-9]*`
-- Identifier：`[_a-zA-Z][_a-zA-Z0-9]*`
-- assignment synbol：`\:\=`
-- less than or equal to：`\<\=`
-- greater than or equal to：`\>\=`
-- other symbols：`[!?:;.,#<=>+-\*/\(\)]`
-- comment：`\{[\f\n\r\t\v -z|~]*\}`
-- white space chars：`[ \f\n\r\t\v][ \f\n\r\t\v]*`
+- 数字：`[0-9][0-9]*`
+- 标识符：`[_a-zA-Z][_a-zA-Z0-9]*`
+- 赋值符号：`\:\=`
+- 小于等于符号：`\<\=`
+- 大于等于符号：`\>\=`
+- 其它符号：`[!?:;.,#<=>+-\*/\(\)]`
+- 注释：`\{[\f\n\r\t\v -z|~]*\}`
+- 空白字符：`[ \f\n\r\t\v][ \f\n\r\t\v]*`
 
-## Automaton architecture
+## 设计自动机
 
-A automaton can be represented by a 5-element tuple $(Q,\Sigma,\delta,q _ 0,F)$.
+一个自动机通过五元组 $(Q,\Sigma,\delta,q _ 0,F)$ 表示，其中：
 
-- $Q$ is state set
-- $\Sigma$ is char set
-- $\delta(q,c)$ is dual transition function
-  - the state-set reached from state-q through transition by char-c
-- the initial state is $q _ 0$, and final(termination) state-set is $F$
+- $Q$ 表示状态集
+- $\Sigma$ 表示字符集
+- $\delta(q,c)$ 表示二元转移函数
+  - 从状态 $q$ 通过转移字符 $c$ 所到达的状态（集）
+- $q _ 0$ 表示起始状态，$F$ 表示终止状态集。
 
-For simpleicity, we note $\hat\delta(q,cw)=\hat\delta(\delta(q,c),w),(w \in \Sigma^*)$.
+为了简便起见，记 $\hat\delta(q,cw)=\hat\delta(\delta(q,c),w),(w \in \Sigma^*)$。
 
-It is easy to observe that both DFA and NFA belong to automata, but their transition functions have different definitions(NFA is `vector<vector<set<int>>>`, DFA is `vector<vector<int>>`).
+容易观察到，DFA和NFA都属于自动机，但它们的转移函数的定义不同（NFA为 `vector<vector<set<int>>>`，DFA为 `vector<vector<int>>`）。
 
-Consider using template classes for different types of inheritance.
+可以考虑使用模板类进行不同类型继承。
 
 ``` cpp
 template<typename T_Delta, typename T_F, typename T_isend>
 class Automachine {
-public:
-    int Q;         // node count (index from 1)
-    int Sigma;     // alphabet size
+    public:
+    int Q; // node count (index from 1)
+    int Sigma; // alphabet size
     T_Delta Delta; // δ(q,w)
-    int q0;        // start state(node)
-    T_F F;         // final state
-    T_isend isend; // setted if is at final state
+    int q0; // start state(node)
+    T_F F; // finished state
+    T_isend isend; // marked if is finished
     Automachine() {}
-    Automachine(int Q, int Sigma, T_Delta Delta, int q0, T_F F, T_isend isend):
-        Q(Q), Sigma(Sigma), Delta(Delta), q0(q0), F(F), isend(isend) {};
+    Automachine(int Q, int Sigma, T_Delta Delta, int q0, T_F F, T_isend isend) : Q(Q), Sigma(Sigma), Delta(Delta), q0(q0), F(F), isend(isend) {};
 };
-class NFA: private Automachine<NFA_Delta, NFA_F, NFA_isend>; // NFA = (Q, Σ, δ, q0, F)
-class DFA: private Automachine<DFA_Delta, DFA_F, DFA_isend>; // DFA = (Q, Σ, δ, q0, F)
+class NFA : private Automachine<NFA_Delta, NFA_F, NFA_isend>; // NFA = (Q, Σ, δ, q0, F)
+class DFA : private Automachine<DFA_Delta, DFA_F, DFA_isend>; // DFA = (Q, Σ, δ, q0, F)
 ```
 
-### Termination state from Regex to ε- NFA (Thompson Construction Method)
+### 从正则表达式到ε-NFA（Thompson构造法）
 
-By using the following transformation, regular expressions can be constructed into equivalent ε-NFA.
+通过下列转化，可以将正则表达式构造成等价的 $\varepsilon-NFA$。
 
-- empty expression `ε`:
+- 空表达式 $\varepsilon$ 转化为：
   ![inline](img/278px-Thompson-epsilon.svg.png)
-- single symbol `a`:
+- 单个符号 $a$ 转化为：
   ![inline](img/Thompson-a-symbol.svg.png)
-- the union of expressions `(s|t)`
+- 表达式的并($s|t$)转化为：
   ![inline](img/Thompson-or.svg.png)
-- the link of two expressions `(st)`:
+- 表达式的连接($st$)转化为：
   ![inline](img/Thompson-concat.svg.png)
-- the Kleen closure `(s*)`:
+- Kleen闭包($s^ * $)转化为：
   ![inline](img/503px-Thompson-kleene-star.svg.png)
 
-### From ε-NFA to NFA (remove ε)
+### 从ε-NFA到NFA（化简ε-NFA）
 
-Let $\epsilon(q)=\{p|\hat \delta(q,\varepsilon)=p\}$ to represent the state-set reached by ε-edge from state-q.
+记 $\epsilon(q)=\{p|\hat \delta(q,\varepsilon)=p\}$，表示状态 $q$ 只沿 $\varepsilon$ 边所能到达的状态集合。
 
-Therefore, $\forall c \in \Sigma,\delta_{NFA}(E(q),c)=\{\cup_{p \in S} E(p)|S=\{r|\delta(q,c)=r\} \}$.
+则 $\forall c \in \Sigma,\delta_{NFA}(E(q),c)=\{\cup_{p \in S} E(p)|S=\{r|\delta(q,c)=r\} \}$。
 
-In fact, it is to represent the process of simulating ε-NFA with a simplified state set.
+实际上，就是将模拟 $\varepsilon-NFA$ 的过程用简化状态集表示。
 
-### From NFA to DFA (determine NFA)
+### 从NFA到DFA（确定化NFA）
 
-We use subset construction method.
+这里采用**子集构造**的方法。
 
-Similar to the step of simplify ε-NFA, we note $\Gamma_c(q)=\{p|\delta(q,c)=p\}$.
+与化简 $\varepsilon-NFA$ 的步骤类似，记 $\Gamma_c(q)=\{p|\delta(q,c)=p\}$，设计如下 DFA：起始状态为 $\{q_0\}$，状态转移函数 $\delta_{DFA}(S,c)=\cup_{p \in S} \Gamma_c(p)$。
 
-Then the DFA is designed like this: initial state is $\{q_0\}$, transition function is $\delta_{DFA}(S,c)=\cup_{p \in S} \Gamma_c(p)$.
+需要注意的是：
 
-It's important that:
+1. 对状态集合的映射，可以采用哈希法，也可以采用 `map<set<int>, int>` 存储（`set<int>` 可以作为 `map` 的键值）。
+2. 通过子集构造方法确定化NFA，这里使用的是**广度优先搜索**(bfs)算法，即通过 `queue<set<int>> que;` 来存储状态集合 $S$，每次通过取队列首端元素进行更新。
 
-1. using hash algorithm to make mappings and it's also workable using `map<set<int>, int>`.
-2. determining NFA through subset construction method, it's based on BFS algorithm, which means using `queue<set<int>> que;` to restore state set S, and update it each time by taking the first element of the queue.
-
-### From DFA to MFA (minimize DFA)
+### 从DFA到MFA（最小化DFA）
 
 最小化DFA有许多算法，这里选用比较直接的**填表算法**。
 
