@@ -78,9 +78,9 @@ In fact, it is to represent the process of simulating ε-NFA with a simplified s
 
 We use subset construction method.
 
-Similar to the step of simplify ε-NFA, we note $\Gamma_c(q)=\{p|\delta(q,c)=p\}$.
+Similar to the step of simplify ε-NFA, we note $\Gamma _ c(q)= \{ p|\delta(q,c)=p \}$.
 
-Then the DFA is designed like this: initial state is $\{q_0\}$, transition function is $\delta_{DFA}(S,c)=\cup_{p \in S} \Gamma_c(p)$.
+Then the DFA is designed like this: initial state is $\{ q _ 0 \}$, transition function is $\delta_{DFA}(S,c)=\cup_{p \in S} \Gamma_c(p)$.
 
 It's important that:
 
